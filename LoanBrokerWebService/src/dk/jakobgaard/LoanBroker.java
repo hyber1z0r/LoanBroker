@@ -8,11 +8,11 @@ import javax.jws.WebService;
 import javax.xml.ws.Endpoint;
 
 @WebService()
-public class App {
+public class LoanBroker {
     private CreditServiceHandler creditServiceHandler;
     private RulebaseServiceHandler rulebaseServiceHandler;
 
-    public App() {
+    public LoanBroker() {
         this.creditServiceHandler = new CreditServiceHandler();
         this.rulebaseServiceHandler = new RulebaseServiceHandler();
     }
@@ -31,8 +31,8 @@ public class App {
     }
 
     public static void main(String[] argv) {
-        Object implementor = new App();
-        String address = "http://localhost:9000/HelloWorld";
+        Object implementor = new LoanBroker();
+        String address = "http://localhost:9000/";
         Endpoint.publish(address, implementor);
         System.err.println("WebService listening on " + address);
     }
