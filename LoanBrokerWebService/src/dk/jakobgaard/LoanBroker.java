@@ -1,20 +1,45 @@
 package dk.jakobgaard;
 
-import dk.jakobgaard.clients.rulebase.RulebaseServiceHandler;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import dk.jakobgaard.clients.banks.Bank;
+import dk.jakobgaard.clients.banks.MessagingBank;
+import dk.jakobgaard.clients.banks.WebServiceBank;
 import dk.jakobgaard.clients.credit.CreditServiceHandler;
+import dk.jakobgaard.clients.rulebase.RulebaseServiceHandler;
+import com.webservice.bank.LoanResponse;
 
 import javax.jws.WebMethod;
 import javax.jws.WebService;
 import javax.xml.ws.Endpoint;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @WebService()
 public class LoanBroker {
     private CreditServiceHandler creditServiceHandler;
     private RulebaseServiceHandler rulebaseServiceHandler;
+    private Map<String, Bank> banks;
+    private Gson gson;
 
-    public LoanBroker() {
+    public LoanBroker() throws IOException {
         this.creditServiceHandler = new CreditServiceHandler();
         this.rulebaseServiceHandler = new RulebaseServiceHandler();
+        this.banks = getBanks();
+        this.gson = new GsonBuilder().create();
+    }
+
+    private Map<String, Bank> getBanks() {
+        Map<String, Bank> banks = new HashMap<>();
+        banks.put("Goldmann Sachs", new MessagingBank("JSON", "cphbusiness.bankJSON", "fanout"));
+        banks.put("Chill Bank", new MessagingBank("XML", "cphbusiness.bankXML", "fanout"));
+        banks.put("Not Safe Bank", new WebServiceBank("JSON"));
+        //  banks.put("Not Safe Bank", new WebServiceBank("Vivus"));
+        return banks;
     }
 
     @WebMethod
@@ -23,17 +48,46 @@ public class LoanBroker {
         if (creditScore < 0) {
             return "Invalid SSN";
         }
+        System.out.println("Creditscore: " + creditScore);
+        List<String> banks = rulebaseServiceHandler.getBanks(creditScore, loanAmount);
+        LoanRequest loanRequest = new LoanRequest(ssn, loanAmount, loanDuration, creditScore);
+        List<LoanResponse> loanRespones = contactBanks(banks, loanRequest);
 
-        String banks = rulebaseServiceHandler.getBanks(creditScore, loanAmount);
-        System.out.println("Got this bank" + banks);
-
-        return "You a nigga";
+        return aggregate(loanRespones);
     }
 
-    public static void main(String[] argv) {
+    public static void main(String[] argv) throws IOException {
         Object implementor = new LoanBroker();
         String address = "http://localhost:9000/";
         Endpoint.publish(address, implementor);
-        System.err.println("WebService listening on " + address);
+        Logger.getGlobal().log(Level.INFO, "WebService listening on " + address);
+    }
+
+    private List<LoanResponse> contactBanks(List<String> banks, LoanRequest loanRequest) {
+        return banks.parallelStream()
+                .map(bank -> this.banks.get(bank))
+                .map(bank -> {
+                    String dataType = bank.getDataType();
+                    return bank.contact(loanRequest.translateTo(dataType));
+                })
+                .filter(Objects::nonNull)
+                .map(this::normalize)
+                .collect(Collectors.toList());
+    }
+
+    private LoanResponse normalize(String loanResponse) {
+        System.out.println("normalizing: " + loanResponse);
+        if (loanResponse.startsWith("{")) {
+            return gson.fromJson(loanResponse, LoanResponse.class);
+        }
+        return null;
+    }
+
+    private String aggregate(List<LoanResponse> loanResponses) {
+        Optional<LoanResponse> min = loanResponses
+                .stream()
+                .min(Comparator.comparingDouble(LoanResponse::getInterestRate));
+        return min.map(loanResponse -> "The best loan is with a " + loanResponse.getInterestRate() + " interest rate")
+                .orElse("No banks wish to loan you money :(");
     }
 }

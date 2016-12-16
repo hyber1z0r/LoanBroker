@@ -1,8 +1,9 @@
 package dk.jakobgaard.clients.rulebase;
 
+import net.banking.rulebase.Rulebase;
+import net.banking.rulebase.RulebaseService;
 
-import rulebase.Rulebase;
-import rulebase.RulebaseService;
+import java.util.List;
 
 public class RulebaseServiceHandler {
     private Rulebase port;
@@ -17,7 +18,7 @@ public class RulebaseServiceHandler {
      * @param loanAmount  The amount the person wants to lend
      * @return banks The banks to contact in a list
      */
-    public String getBanks(int creditScore, double loanAmount) {
+    public List<String> getBanks(int creditScore, double loanAmount) {
         return port.getBanks(creditScore, loanAmount);
     }
 }

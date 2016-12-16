@@ -1,4 +1,4 @@
-package dk.webservice.bank;
+package com.webservice.bank;
 
 import javax.jws.WebMethod;
 import javax.jws.WebService;
