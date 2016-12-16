@@ -1,4 +1,4 @@
-package dk.webservice.bank;
+package com.webservice.bank;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

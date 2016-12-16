@@ -1,12 +1,14 @@
-package rulebase;
+package net.banking.rulebase;
 
 import javax.xml.ws.Endpoint;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class App {
     public static void main(String[] argv) {
         Object implementor = new Rulebase();
         String address = "http://localhost:9001/Rulebase";
         Endpoint.publish(address, implementor);
-        System.err.println("WebService listening on " + address);
+        Logger.getGlobal().log(Level.INFO, "WebService listening on " + address);
     }
 }
