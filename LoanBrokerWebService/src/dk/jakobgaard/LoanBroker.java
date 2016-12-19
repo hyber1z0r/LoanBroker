@@ -2,19 +2,18 @@ package dk.jakobgaard;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.webservice.bank.LoanResponse;
 import dk.jakobgaard.clients.banks.Bank;
 import dk.jakobgaard.clients.banks.MessagingBank;
 import dk.jakobgaard.clients.banks.WebServiceBank;
 import dk.jakobgaard.clients.credit.CreditServiceHandler;
 import dk.jakobgaard.clients.rulebase.RulebaseServiceHandler;
-import com.webservice.bank.LoanResponse;
 
 import javax.jws.WebMethod;
 import javax.jws.WebService;
 import javax.xml.ws.Endpoint;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -65,11 +64,8 @@ public class LoanBroker {
 
     private List<LoanResponse> contactBanks(List<String> banks, LoanRequest loanRequest) {
         return banks.parallelStream()
-                .map(bank -> this.banks.get(bank))
-                .map(bank -> {
-                    String dataType = bank.getDataType();
-                    return bank.contact(loanRequest.translateTo(dataType));
-                })
+                .map(this.banks::get)
+                .map(bank -> bank.contact(loanRequest.translateTo(bank.getDataType())))
                 .filter(Objects::nonNull)
                 .map(this::normalize)
                 .collect(Collectors.toList());
