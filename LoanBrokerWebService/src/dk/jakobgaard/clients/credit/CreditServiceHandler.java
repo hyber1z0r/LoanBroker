@@ -4,7 +4,7 @@ package dk.jakobgaard.clients.credit;
 import org.bank.credit.web.service.CreditScoreService;
 import org.bank.credit.web.service.CreditScoreService_Service;
 
-public class CreditServiceHandler {
+public class CreditServiceHandler implements CreditService {
     private CreditScoreService port;
 
     public CreditServiceHandler() {

@@ -6,7 +6,9 @@ import com.webservice.bank.LoanResponse;
 import dk.jakobgaard.clients.banks.Bank;
 import dk.jakobgaard.clients.banks.MessagingBank;
 import dk.jakobgaard.clients.banks.WebServiceBank;
+import dk.jakobgaard.clients.credit.CreditService;
 import dk.jakobgaard.clients.credit.CreditServiceHandler;
+import dk.jakobgaard.clients.rulebase.IRulebaseService;
 import dk.jakobgaard.clients.rulebase.RulebaseServiceHandler;
 
 import javax.jws.WebMethod;
@@ -20,14 +22,18 @@ import java.util.stream.Collectors;
 
 @WebService()
 public class LoanBroker {
-    private CreditServiceHandler creditServiceHandler;
-    private RulebaseServiceHandler rulebaseServiceHandler;
+    private CreditService creditService;
+    private IRulebaseService rulebaseService;
     private Map<String, Bank> banks;
     private Gson gson;
 
     public LoanBroker() throws IOException {
-        this.creditServiceHandler = new CreditServiceHandler();
-        this.rulebaseServiceHandler = new RulebaseServiceHandler();
+        this(new CreditServiceHandler(), new RulebaseServiceHandler());
+    }
+
+    public LoanBroker(CreditService creditService, IRulebaseService rulebaseService) {
+        this.creditService = creditService;
+        this.rulebaseService = rulebaseService;
         this.banks = getBanks();
         this.gson = new GsonBuilder().create();
     }
@@ -43,12 +49,12 @@ public class LoanBroker {
 
     @WebMethod
     public String fileLoanRequest(String ssn, double loanAmount, long loanDuration) {
-        int creditScore = creditServiceHandler.getCreditScore(ssn);
+        int creditScore = creditService.getCreditScore(ssn);
         if (creditScore < 0) {
             return "Invalid SSN";
         }
         System.out.println("Creditscore: " + creditScore);
-        List<String> banks = rulebaseServiceHandler.getBanks(creditScore, loanAmount);
+        List<String> banks = rulebaseService.getBanks(creditScore, loanAmount);
         LoanRequest loanRequest = new LoanRequest(ssn, loanAmount, loanDuration, creditScore);
         List<LoanResponse> loanRespones = contactBanks(banks, loanRequest);
 

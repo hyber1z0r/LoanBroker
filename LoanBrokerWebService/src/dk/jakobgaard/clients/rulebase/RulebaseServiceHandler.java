@@ -5,7 +5,7 @@ import net.banking.rulebase.RulebaseService;
 
 import java.util.List;
 
-public class RulebaseServiceHandler {
+public class RulebaseServiceHandler implements IRulebaseService {
     private Rulebase port;
 
     public RulebaseServiceHandler() {
