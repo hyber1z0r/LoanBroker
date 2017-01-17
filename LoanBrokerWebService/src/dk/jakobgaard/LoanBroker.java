@@ -38,12 +38,13 @@ public class LoanBroker {
         this.gson = new GsonBuilder().create();
     }
 
+    // Little builder function that builds a map with the name as a key
+    // and the actual bank and how to contact it as a value
     private Map<String, Bank> getBanks() {
         Map<String, Bank> banks = new HashMap<>();
         banks.put("Goldmann Sachs", new MessagingBank("JSON", "cphbusiness.bankJSON", "fanout"));
         banks.put("Chill Bank", new MessagingBank("XML", "cphbusiness.bankXML", "fanout"));
-        banks.put("Not Safe Bank", new WebServiceBank("JSON"));
-        //  banks.put("Not Safe Bank", new WebServiceBank("Vivus"));
+        banks.put("Vivus", new WebServiceBank("JSON"));
         return banks;
     }
 
@@ -79,17 +80,17 @@ public class LoanBroker {
 
     private LoanResponse normalize(String loanResponse) {
         System.out.println("normalizing: " + loanResponse);
-        if (loanResponse.startsWith("{")) {
+        if (loanResponse.startsWith("{")) { // If json
             return gson.fromJson(loanResponse, LoanResponse.class);
-        }
+        } // not impl yet
         return null;
     }
 
     private String aggregate(List<LoanResponse> loanResponses) {
-        Optional<LoanResponse> min = loanResponses
+        return loanResponses
                 .stream()
-                .min(Comparator.comparingDouble(LoanResponse::getInterestRate));
-        return min.map(loanResponse -> "The best loan is with a " + loanResponse.getInterestRate() + " interest rate")
+                .min(Comparator.comparingDouble(LoanResponse::getInterestRate))
+                .map(loanResponse -> "The best loan is with a " + loanResponse.getInterestRate() + " interest rate")
                 .orElse("No banks wish to loan you money :(");
     }
 }

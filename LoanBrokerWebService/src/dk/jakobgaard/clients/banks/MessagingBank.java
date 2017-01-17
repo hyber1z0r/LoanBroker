@@ -40,7 +40,7 @@ public class MessagingBank extends Bank {
         QueueingConsumer.Delivery delivery;
         try {
             this.chan.basicPublish(this.exchangeName, "", buildHeaders(REPLY_QUEUE), loanRequest.getBytes()); // Publish the message on the exchange
-            delivery = consumer.nextDelivery(TIMEOUT);
+            delivery = consumer.nextDelivery(TIMEOUT); // Endpoint
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             return null;
