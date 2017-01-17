@@ -48,6 +48,7 @@ public class LoanBroker {
         return banks;
     }
 
+    //Exposed to client
     @WebMethod
     public String fileLoanRequest(String ssn, double loanAmount, long loanDuration) {
         int creditScore = creditService.getCreditScore(ssn);
@@ -56,6 +57,7 @@ public class LoanBroker {
         }
         System.out.println("Creditscore: " + creditScore);
         List<String> banks = rulebaseService.getBanks(creditScore, loanAmount);
+        //we got a canonical data model
         LoanRequest loanRequest = new LoanRequest(ssn, loanAmount, loanDuration, creditScore);
         List<LoanResponse> loanRespones = contactBanks(banks, loanRequest);
 

@@ -23,6 +23,8 @@ public class WebServiceBank extends Bank {
                 request.getLoanAmount(),
                 request.getDuration());
         // Parse back to JSON String
+        // Vi har formået at lave unødvendige parsninger frem og tilbage mellem JSON og POJO.
+        // SOAP er XML baseret
         System.out.println("Got this response: " + toJSON(loanResponse));
         return toJSON(loanResponse);
     }
